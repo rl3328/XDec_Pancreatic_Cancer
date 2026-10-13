@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Term 2 weekly timetable · Fall 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+ --bg:#F2F4F7;--surface:#FFFFFF;--ink:#1B2230;--muted:#5B6576;--line:#DCE1E8;--line2:#EDF0F4;
+ --fa:#3A4BA8;--fb:#00796B;--qcm:#B36200;--sem:#8A3A8A;--adv:#6A4FB3;--exam:#C0262D;--focus:#3A4BA8;
+ --tint:12%}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161D;--surface:#1A2029;--ink:#E6EAF0;--muted:#9AA4B4;--line:#2C3441;--line2:#222935;
+ --fa:#8C9BFF;--fb:#4FC3B2;--qcm:#F0A24A;--sem:#D98AD9;--adv:#B39CFF;--rcr:#9EB3C0;--exam:#FF6B70;--focus:#8C9BFF;--tint:18%}}
+:root[data-theme="dark"]{--bg:#12161D;--surface:#1A2029;--ink:#E6EAF0;--muted:#9AA4B4;--line:#2C3441;--line2:#222935;
+ --fa:#8C9BFF;--fb:#4FC3B2;--qcm:#F0A24A;--sem:#D98AD9;--adv:#B39CFF;--rcr:#9EB3C0;--exam:#FF6B70;--focus:#8C9BFF;--tint:18%}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 48px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 24px;margin-bottom:20px}
+h1{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:clamp(1.9rem,4.5vw,2.8rem);line-height:1.05;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:6px 0 0}
+.nav{display:flex;align-items:center;gap:8px}
+.nav button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer}
+.nav button:disabled{opacity:.4;cursor:default}
+button:focus-visible,.ev:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* week strip = the memorable element */
+.strip{display:grid;grid-template-columns:repeat(9,minmax(104px,1fr));gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px}
+.wk{font:inherit;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 10px;cursor:pointer;position:relative}
+.wk b{display:block;font-size:.95rem}
+.wk span{display:block;font-size:.78rem;color:var(--muted)}
+.wk[aria-current="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.wk[aria-current="true"] span{color:inherit;opacity:.75}
+.wk .flag{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--exam)}
+.banner{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--exam);border-radius:8px;padding:10px 14px;margin-bottom:14px}
+.banner.soft{border-left-color:var(--muted)}
+.banner:empty{display:none}
+.gridwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.grid{display:grid;grid-template-columns:56px repeat(5,minmax(150px,1fr));min-width:820px}
+.dayhead{padding:10px 10px 8px;border-bottom:1px solid var(--line);border-left:1px solid var(--line)}
+.dayhead b{display:block}.dayhead span{color:var(--muted);font-size:.85rem}
+.dayhead.off{color:var(--muted)}
+.times{position:relative}
+.times div{position:absolute;right:8px;font-size:.75rem;color:var(--muted);transform:translateY(-50%)}
+.col{position:relative;border-left:1px solid var(--line);background-image:linear-gradient(var(--line2) 1px,transparent 1px);background-size:100% var(--hr)}
+.col.off{background-color:color-mix(in srgb,var(--muted) 8%,transparent)}
+.col .hol{position:absolute;inset:40% 8px auto;text-align:center;color:var(--muted);font-size:.9rem}
+.ev{position:absolute;left:4px;right:4px;display:flex;flex-direction:column;justify-content:flex-start;border-radius:7px;padding:5px 7px;overflow:hidden;cursor:pointer;border:0;text-align:left;font:inherit;
+ color:var(--ink);background:color-mix(in srgb,var(--c) var(--tint),var(--surface));border-left:4px solid var(--c)}
+.ev .t{font-size:.72rem;color:var(--muted)}
+.ev .n{font-weight:700;font-size:.85rem;line-height:1.2;color:var(--c)}
+.ev .p{font-size:.78rem;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ev .r{font-size:.75rem;color:var(--muted)}
+.ev.exam{background:var(--exam);color:#fff;border-left-color:var(--exam)}
+.ev.exam .n,.ev.exam .t,.ev.exam .r{color:#fff}
+.ev[aria-pressed="true"]{box-shadow:0 0 0 2px var(--c)}
+.detail{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-height:64px}
+.detail h2{font-size:1.1rem;margin:0 0 4px}
+.detail p{margin:2px 0;max-width:70ch}
+.detail .hint{color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px;font-size:.88rem;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+/* list view for phones */
+.list{display:none}
+.list section{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:10px 12px}
+.list h3{margin:0 0 6px;font-size:1rem}
+.list .item{display:grid;grid-template-columns:92px 1fr;gap:8px;padding:7px 0;border-top:1px solid var(--line2)}
+.list .item:first-of-type{border-top:0}
+.list .tm{font-size:.85rem;color:var(--muted)}
+.list .nm{font-weight:700;color:var(--c)}
+.list .item.exam .nm{color:var(--exam)}
+.list .item.exam .nm::after{content:" exam";font-weight:400}
+.list .tp{font-size:.88rem}
+.list .rm{font-size:.82rem;color:var(--muted)}
+.list .none{color:var(--muted);font-size:.9rem}
+@media (max-width:720px){.gridwrap,.detail,.legend{display:none}.list{display:block}.wrap{padding:18px 14px 36px}}
+@media (prefers-reduced-motion:no-preference){.ev{transition:box-shadow .15s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <div><h1 id="title">Week of Oct 12</h1><p class="sub" id="sub">Term 2 · Oct 12 – Dec 11, 2026</p></div>
+ <div class="nav"><button id="prev" aria-label="Previous week">‹ Prev</button><button id="today">This week</button><button id="next" aria-label="Next week">Next ›</button></div>
+</header>
+<nav class="strip" id="strip" aria-label="Weeks of Term 2"></nav>
+<div class="banner" id="banner" role="note"></div>
+<div class="gridwrap"><div class="grid" id="grid"></div></div>
+<div class="detail" id="detail" aria-live="polite"><p class="hint">Select a class to see its topic, lecturer and reading.</p></div>
+<div class="list" id="list"></div>
+<div class="legend" id="legend"></div>
+</div>
+<script>
+const EVENTS = [{"date": "2026-10-12", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L24: Gene transcription fundamentals 1 + Readiness Quiz 6", "room": "N315", "note": "Reading: MBC pp 299-316. Lecturer: Charles Foulds", "exam": false}, {"date": "2026-10-12", "start": "14:30", "end": "15:45", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "L11 Multiple measurements per subject", "room": "N315", "note": "Lecturer: Hilsenbeck", "exam": false}, {"date": "2026-10-13", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-10-14", "start": "12:00", "end": "13:00", "course": "sem", "code": "GS-QC-5105", "name": "Seminar in Quant. Biosciences", "topic": "Seminar", "room": "N315", "note": "", "exam": false}, {"date": "2026-10-14", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L25: Gene transcription fundamentals 2", "room": "N315", "note": "Charles Foulds", "exam": false}, {"date": "2026-10-15", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-10-15", "start": "12:00", "end": "13:30", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "Lab 7 - Paired t-test, repeated measurements", "room": "N317", "note": "", "exam": false}, {"date": "2026-10-16", "start": "12:00", "end": "13:00", "course": "adv", "code": "GS-QC-5110", "name": "Advanced Topics in QCB", "topic": "Seminar", "room": "N311", "note": "", "exam": false}, {"date": "2026-10-16", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L26: Cis-regulatory elements", "room": "N315", "note": "Anil Panigrahi", "exam": false}, {"date": "2026-10-19", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L27: Co-regulators", "room": "N315", "note": "Charles Foulds", "exam": false}, {"date": "2026-10-19", "start": "14:30", "end": "15:45", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "L12 Survival analysis", "room": "N315", "note": "Lecturer: Hilsenbeck", "exam": false}, {"date": "2026-10-20", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-10-21", "start": "12:00", "end": "13:00", "course": "sem", "code": "GS-QC-5105", "name": "Seminar in Quant. Biosciences", "topic": "Seminar", "room": "N315", "note": "", "exam": false}, {"date": "2026-10-21", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L28: Chromatin & gene expression 1", "room": "N315", "note": "Anil Panigrahi", "exam": false}, {"date": "2026-10-22", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-10-22", "start": "12:00", "end": "13:30", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "Lab 8 - Survival", "room": "N317", "note": "", "exam": false}, {"date": "2026-10-23", "start": "12:00", "end": "13:00", "course": "adv", "code": "GS-QC-5110", "name": "Advanced Topics in QCB", "topic": "Seminar", "room": "N311", "note": "", "exam": false}, {"date": "2026-10-23", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L29: Chromatin & gene expression 2", "room": "N315", "note": "Anil Panigrahi", "exam": false}, {"date": "2026-10-23", "start": "14:30", "end": "15:45", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "Discussion Session", "room": "N311 / M321 / M323", "note": "In-session quiz. Paper: Lu et al., 2018 Nature 558:318-323", "exam": false}, {"date": "2026-10-23", "start": "17:15", "end": "18:30", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "TA Session Module 6", "room": "N315", "note": "", "exam": false}, {"date": "2026-10-26", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "Faculty Review, TA Quiz & Office hours", "room": "N315", "note": "", "exam": false}, {"date": "2026-10-26", "start": "14:30", "end": "15:45", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "L13 Rank tests for comparison", "room": "N315", "note": "Lecturer: Minard", "exam": false}, {"date": "2026-10-27", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-10-28", "start": "12:00", "end": "13:00", "course": "sem", "code": "GS-QC-5105", "name": "Seminar in Quant. Biosciences", "topic": "Seminar", "room": "N315", "note": "", "exam": false}, {"date": "2026-10-28", "start": "13:00", "end": "16:00", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "EXAM 2 (Lectures 13-29)", "room": "M112", "note": "", "exam": true}, {"date": "2026-10-29", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-10-29", "start": "12:00", "end": "13:30", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "Lab 9 - Rank tests", "room": "N317", "note": "", "exam": false}, {"date": "2026-10-30", "start": "12:00", "end": "13:00", "course": "adv", "code": "GS-QC-5110", "name": "Advanced Topics in QCB", "topic": "Seminar", "room": "N311", "note": "", "exam": false}, {"date": "2026-10-30", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L30: mRNA splicing + Readiness Quiz 7", "room": "N315", "note": "Reading: MBC pp 315-327, 415-423. Chonghui Cheng", "exam": false}, {"date": "2026-11-02", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L31: Alternative mRNA splicing", "room": "N315", "note": "Chonghui Cheng", "exam": false}, {"date": "2026-11-02", "start": "14:30", "end": "15:45", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "L14 Experimental design", "room": "N315", "note": "Lecturer: May", "exam": false}, {"date": "2026-11-03", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-11-04", "start": "12:00", "end": "13:00", "course": "sem", "code": "GS-QC-5105", "name": "Seminar in Quant. Biosciences", "topic": "Seminar", "room": "N315", "note": "", "exam": false}, {"date": "2026-11-04", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L32: mRNA 3' end formation, modification & export", "room": "N315", "note": "Jeremy Wilusz", "exam": false}, {"date": "2026-11-05", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-11-05", "start": "12:00", "end": "13:30", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "Student Presentations - Discussion of studies", "room": "N317", "note": "", "exam": false}, {"date": "2026-11-06", "start": "12:00", "end": "13:00", "course": "adv", "code": "GS-QC-5110", "name": "Advanced Topics in QCB", "topic": "Seminar", "room": "N311", "note": "", "exam": false}, {"date": "2026-11-06", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L33: mRNA quality control, stability & regulation", "room": "N315", "note": "Jeremy Wilusz", "exam": false}, {"date": "2026-11-06", "start": "14:30", "end": "15:45", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "Discussion Session", "room": "N311 / M321 / M323", "note": "In-session quiz. Paper: Ule et al., 2006 Nature 444:580-586", "exam": false}, {"date": "2026-11-09", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L34: Non-coding RNAs", "room": "N315", "note": "Jeremy Wilusz", "exam": false}, {"date": "2026-11-09", "start": "14:30", "end": "15:45", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "L15 Genomics - Intro to RNAseq & data prep", "room": "N315", "note": "Lecturer: Lei", "exam": false}, {"date": "2026-11-09", "start": "17:15", "end": "18:30", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "TA Session Module 7", "room": "N315", "note": "", "exam": false}, {"date": "2026-11-10", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-11-11", "start": "12:00", "end": "13:00", "course": "sem", "code": "GS-QC-5105", "name": "Seminar in Quant. Biosciences", "topic": "Seminar", "room": "N315", "note": "", "exam": false}, {"date": "2026-11-11", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L35: Protein translation & folding + Readiness Quiz 8", "room": "N315", "note": "Reading: Hartl et al., 2011 Nature 475:324-332. Francis Tsai", "exam": false}, {"date": "2026-11-12", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-11-12", "start": "12:00", "end": "13:30", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "Lab 10 - Low level processing", "room": "N317", "note": "", "exam": false}, {"date": "2026-11-13", "start": "12:00", "end": "13:00", "course": "adv", "code": "GS-QC-5110", "name": "Advanced Topics in QCB", "topic": "Seminar", "room": "N311", "note": "", "exam": false}, {"date": "2026-11-13", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L36: Protein biosynthetic quality control", "room": "N315", "note": "Na Zhao", "exam": false}, {"date": "2026-11-16", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L37: Protein stress responses", "room": "N315", "note": "Andre Catic", "exam": false}, {"date": "2026-11-16", "start": "14:30", "end": "15:45", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "L16 Genomics - Linear model basis for DE", "room": "N315", "note": "Lecturer: Kanchi", "exam": false}, {"date": "2026-11-17", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-11-18", "start": "12:00", "end": "13:00", "course": "sem", "code": "GS-QC-5105", "name": "Seminar in Quant. Biosciences", "topic": "Seminar", "room": "N315", "note": "", "exam": false}, {"date": "2026-11-18", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L38: Apoptosis, necrosis, mitochondrial apoptosis", "room": "N315", "note": "Penelope Bonnen", "exam": false}, {"date": "2026-11-19", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-11-19", "start": "12:00", "end": "13:30", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "Lab 11 - Differential expression", "room": "N317", "note": "", "exam": false}, {"date": "2026-11-20", "start": "12:00", "end": "13:00", "course": "adv", "code": "GS-QC-5110", "name": "Advanced Topics in QCB", "topic": "Seminar", "room": "N311", "note": "", "exam": false}, {"date": "2026-11-20", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L39: Mitophagy, autophagy", "room": "N315", "note": "Penelope Bonnen", "exam": false}, {"date": "2026-11-20", "start": "14:30", "end": "15:45", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "Discussion Session", "room": "N311 / M321 / M323", "note": "In-session quiz. Paper: Sidrauski et al., 2013 eLife", "exam": false}, {"date": "2026-11-20", "start": "17:15", "end": "18:30", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "TA Session Module 8", "room": "N315", "note": "", "exam": false}, {"date": "2026-11-23", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L40: Principles of mammalian development + Readiness Quiz 9", "room": "N315", "note": "Reading: Arnold & Robertson 2009 Nat Rev Mol Cell Biol. Ronald Parchem", "exam": false}, {"date": "2026-11-23", "start": "14:30", "end": "15:45", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "L17 Genomics - Statistical basis for gene set analysis", "room": "N315", "note": "Lecturer: Kanchi & Lei", "exam": false}, {"date": "2026-11-24", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-11-25", "start": "12:00", "end": "13:00", "course": "sem", "code": "GS-QC-5105", "name": "Seminar in Quant. Biosciences", "topic": "Seminar", "room": "N315", "note": "", "exam": false}, {"date": "2026-11-25", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L41: Stem cells", "room": "N315", "note": "Daisuke Nakada", "exam": false}, {"date": "2026-11-30", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L42: Tissue homeostasis & metabolism 1", "room": "N315", "note": "Noah Shroyer", "exam": false}, {"date": "2026-11-30", "start": "14:30", "end": "15:45", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "L18 Reproducible research", "room": "N315", "note": "Lecturer: Hilsenbeck", "exam": false}, {"date": "2026-12-01", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-12-02", "start": "12:00", "end": "13:00", "course": "sem", "code": "GS-QC-5105", "name": "Seminar in Quant. Biosciences", "topic": "Seminar", "room": "N315", "note": "", "exam": false}, {"date": "2026-12-02", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L43: Post-translational modifications in ciliogenesis", "room": "N315", "note": "Ruhee Dere", "exam": false}, {"date": "2026-12-03", "start": "10:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Lecture", "room": "N302", "note": "", "exam": false}, {"date": "2026-12-03", "start": "12:00", "end": "13:30", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "Lab 12 - GSEA demo", "room": "N317", "note": "", "exam": false}, {"date": "2026-12-03", "start": "16:00", "end": "17:15", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "TA Help Session", "room": "N315", "note": "", "exam": false}, {"date": "2026-12-04", "start": "09:00", "end": "10:15", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "TA Help Session", "room": "M112", "note": "", "exam": false}, {"date": "2026-12-04", "start": "12:00", "end": "13:00", "course": "adv", "code": "GS-QC-5110", "name": "Advanced Topics in QCB", "topic": "Seminar", "room": "N311", "note": "", "exam": false}, {"date": "2026-12-04", "start": "13:00", "end": "14:15", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "L44: Tissue homeostasis & metabolism 2", "room": "N315", "note": "Sean Hartig", "exam": false}, {"date": "2026-12-04", "start": "14:30", "end": "15:45", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "Faculty Review, TA Quiz & Office hours", "room": "N315", "note": "", "exam": false}, {"date": "2026-12-04", "start": "17:15", "end": "18:30", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "TA Session Module 9", "room": "N315", "note": "", "exam": false}, {"date": "2026-12-08", "start": "09:00", "end": "12:00", "course": "qcm", "code": "GS-QC-6401", "name": "QCM Biosciences 1", "topic": "Final exam", "room": "N302", "note": "Per GSBS Bulletin final exam schedule - confirm with course director.", "exam": true}, {"date": "2026-12-09", "start": "13:00", "end": "16:00", "course": "fa", "code": "GS-GS-6600", "name": "Foundations A", "topic": "EXAM 3 (Lectures 30-44)", "room": "N315", "note": "", "exam": true}, {"date": "2026-12-10", "start": "13:00", "end": "16:00", "course": "fb", "code": "GS-GS-6400", "name": "Foundations B", "topic": "FINAL EXAM", "room": "Kleberg Auditorium (M215)", "note": "", "exam": true}];
+const COURSES = {fa:["Foundations A","GS-GS-6600"],fb:["Foundations B","GS-GS-6400"],qcm:["QCM Biosciences 1","GS-QC-6401"],sem:["Seminar in Quant. Biosciences","GS-QC-5105"],adv:["Advanced Topics in QCB","GS-QC-5110"]};
+const WEEKS = ["2026-10-12","2026-10-19","2026-10-26","2026-11-02","2026-11-09","2026-11-16","2026-11-23","2026-11-30","2026-12-07"];
+const NOTES = {
+ 1:["soft","Mon Oct 19 is the last day to drop/add."],
+ 2:["","Foundations A Exam 2 · Wed Oct 28, 1:00–4:00 pm in M112 (not the usual room)."],
+ 6:["soft","Thanksgiving: no classes Thu Nov 26 & Fri Nov 27. Term 3 registration is open Nov 23 – Dec 4."],
+ 7:["soft","Last week of classes (last class day Fri Dec 4). Term 3 registration closes Dec 4."],
+ 8:["","Final exams week."]};
+const HOL = {"2026-11-26":"Thanksgiving","2026-11-27":"Thanksgiving"};
+const START=9, END=18.75, HR=70;
+const DN=["Mon","Tue","Wed","Thu","Fri"];
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+document.documentElement.style.setProperty("--hr",HR+"px");
+const P=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const fmt=d=>MON[d.getMonth()]+" "+d.getDate();
+const hm=t=>{const[h,m]=t.split(":").map(Number);return h+m/60};
+const t12=t=>{let[h,m]=t.split(":").map(Number);const ap=h>=12?"pm":"am";h=h%12||12;return h+":"+String(m).padStart(2,"0")+" "+ap};
+const cvar=e=>e.exam?"var(--exam)":`var(--${e.course})`;
+function defaultWeek(){const t=new Date();for(let i=WEEKS.length-1;i>=0;i--){if(t>=P(WEEKS[i]))return i}return 0}
+let cur=defaultWeek();
+try{const s=localStorage.getItem("t2week");if(s!==null&&+s>=0&&+s<WEEKS.length)cur=+s}catch(e){}
+
+const strip=document.getElementById("strip");
+WEEKS.forEach((w,i)=>{const b=document.createElement("button");b.className="wk";const mon=P(w);
+ const hasExam=EVENTS.some(e=>e.exam&&P(e.date)>=mon&&P(e.date)<addD(mon,5));
+ b.innerHTML=`<b>${i===8?"Exams":"Week "+(i+1)}</b><span>${fmt(mon)} – ${fmt(addD(mon,4))}</span>`+(hasExam?'<i class="flag" title="Exam this week"></i>':"");
+ b.onclick=()=>show(i);strip.appendChild(b)});
+
+document.getElementById("legend").innerHTML=Object.entries(COURSES).map(([k,v])=>`<span><i style="background:var(--${k})"></i>${v[0]}</span>`).join("")+`<span><i style="background:var(--exam)"></i>Exam</span>`;
+
+function evDetail(e){const c=COURSES[e.course];
+ document.getElementById("detail").innerHTML=`<h2 style="color:${cvar(e)}">${c[0]} <span style="color:var(--muted);font-weight:400;font-size:.9rem">${e.code}</span></h2>
+ <p><strong>${e.topic}</strong></p><p>${DN[P(e.date).getDay()-1]}, ${fmt(P(e.date))} · ${t12(e.start)} – ${t12(e.end)} · Room ${e.room}</p>${e.note?`<p class="hint">${e.note}</p>`:""}`}
+
+function show(i){cur=Math.max(0,Math.min(WEEKS.length-1,i));try{localStorage.setItem("t2week",cur)}catch(e){}
+ const mon=P(WEEKS[cur]);
+ document.getElementById("title").textContent=(cur===8?"Exam week":"Week "+(cur+1))+": "+fmt(mon)+" – "+fmt(addD(mon,4));
+ document.getElementById("prev").disabled=cur===0;document.getElementById("next").disabled=cur===WEEKS.length-1;
+ [...strip.children].forEach((b,j)=>b.setAttribute("aria-current",j===cur));
+ const n=NOTES[cur],bn=document.getElementById("banner");bn.className="banner"+(n&&n[0]?" "+n[0]:"");bn.textContent=n?n[1]:"";
+ const g=document.getElementById("grid");g.innerHTML="";
+ g.appendChild(Object.assign(document.createElement("div"),{className:"dayhead"}));
+ const days=[0,1,2,3,4].map(k=>addD(mon,k));
+ days.forEach((d,k)=>{const h=document.createElement("div");h.className="dayhead"+(HOL[iso(d)]?" off":"");h.innerHTML=`<b>${DN[k]}</b><span>${fmt(d)}</span>`;g.appendChild(h)});
+ const H=(END-START)*HR;const tc=document.createElement("div");tc.className="times";tc.style.height=H+"px";
+ for(let h=START;h<=18;h++){const t=document.createElement("div");t.style.top=(h-START)*HR+"px";t.textContent=(h%12||12)+(h<12?"a":"p");if(h>START)tc.appendChild(t)}
+ g.appendChild(tc);
+ const list=document.getElementById("list");list.innerHTML="";
+ days.forEach((d,k)=>{const col=document.createElement("div");col.className="col"+(HOL[iso(d)]?" off":"");col.style.height=H+"px";
+  const evs=EVENTS.filter(e=>e.date===iso(d)).sort((a,b)=>a.start.localeCompare(b.start));
+  if(HOL[iso(d)])col.innerHTML=`<div class="hol">${HOL[iso(d)]}<br>no classes</div>`;
+  const sec=document.createElement("section");sec.innerHTML=`<h3>${DN[k]}, ${fmt(d)}</h3>`;
+  evs.forEach(e=>{const c=COURSES[e.course];const b=document.createElement("button");b.className="ev"+(e.exam?" exam":"");
+   b.style.setProperty("--c",cvar(e));const top=(hm(e.start)-START)*HR,ht=(hm(e.end)-hm(e.start))*HR;
+   b.style.top=top+1+"px";b.style.height=ht-2+"px";b.setAttribute("aria-pressed","false");
+   const generic=["Lecture","Seminar","Session"].includes(e.topic);
+   b.innerHTML=`<div class="t">${t12(e.start)}–${t12(e.end)} · ${e.room}</div><div class="n">${c[0]}</div>`+(generic?"":`<div class="p" style="-webkit-line-clamp:${ht<90?1:3}">${e.topic}</div>`);
+   b.setAttribute("aria-label",`${c[0]}, ${e.topic}, ${t12(e.start)} to ${t12(e.end)}, room ${e.room}`);
+   b.onclick=()=>{g.querySelectorAll(".ev").forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");evDetail(e)};
+   col.appendChild(b);
+   const it=document.createElement("div");it.className="item"+(e.exam?" exam":"");it.style.setProperty("--c",cvar(e));
+   it.innerHTML=`<div class="tm">${t12(e.start)}<br>${t12(e.end)}</div><div><div class="nm">${c[0]}</div><div class="tp">${e.topic}</div><div class="rm">Room ${e.room}${e.note?" · "+e.note:""}</div></div>`;
+   sec.appendChild(it)});
+  if(!evs.length)sec.insertAdjacentHTML("beforeend",`<div class="none">${HOL[iso(d)]?HOL[iso(d)]+", no classes":"No classes"}</div>`);
+  g.appendChild(col);list.appendChild(sec)});
+ document.getElementById("detail").innerHTML='<p class="hint">Select a class to see its topic, lecturer and reading.</p>';
+}
+document.getElementById("prev").onclick=()=>show(cur-1);
+document.getElementById("next").onclick=()=>show(cur+1);
+document.getElementById("today").onclick=()=>show(defaultWeek());
+document.addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;if(e.key==="ArrowLeft")show(cur-1);if(e.key==="ArrowRight")show(cur+1)});
+show(cur);
+</script>
+</body>
+</html>
