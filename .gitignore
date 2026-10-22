@@ -1,0 +1,9 @@
+.DS_Store
+.Rhistory
+.RData
+.Rproj.user/
+
+# Raw GDC downloads and large derived matrices - regenerate via progress/scripts/rnaseq_download
+# (scripts/ and data/ live nested under progress/, not the repo root - see progress/scripts/rnaseq_download/)
+progress/data/raw/
+progress/data/processed/
