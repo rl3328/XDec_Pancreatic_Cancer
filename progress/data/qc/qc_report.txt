@@ -1,0 +1,8 @@
+TPM column sums: median = 999785 (expect ~1,000,000).
+Samples with column sum off by >1e4 from 1e6: 0
+Sample type counts: Primary Tumor=178, Solid Tissue Normal=4
+Patients with >1 sample/aliquot in the matrix: 4
+Sample pairs with Spearman r > 0.99 on log2(TPM+1): 0
+Mean gene detection rate (TPM>0): 54.5% | samples flagged as outliers (<mean-3sd): 1
+PCA (top 2000 variable genes): samples beyond 3 SD on PC1/PC2: 8
+Clinical-vs-expression sex mismatches: 4

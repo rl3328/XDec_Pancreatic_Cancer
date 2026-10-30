@@ -1,0 +1,8 @@
+Unique TSS (collection sites): 27 | unique plates: 12 | unique sequencing centers: 1
+
+PC      pct_var R2_sample_type     R2_tss   R2_plate
+PC1       18.6%          0.002      0.233      0.101
+PC2       16.0%          0.030      0.179      0.158
+PC3        7.1%          0.004      0.076      0.042
+PC4        5.5%          0.020      0.092      0.097
+PC5        4.7%          0.020      0.120      0.023
