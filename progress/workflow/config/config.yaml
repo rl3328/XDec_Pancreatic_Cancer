@@ -1,17 +1,20 @@
 # Default config for workflow/Snakefile (XDec end-to-end pipeline).
 # Override any key from the command line, e.g.:
 #   snakemake --cores 6 --configfile workflow/config/config.yaml \
-#       --config k_range="3,4,5" refs_k_values="3,8,9"
+#       --config k_range='[3,4,5]' refs_k_values='[3,8,9]'
 # or point --configfile at an entirely separate YAML file.
 
-# Reference export (Peng et al. 2019, Zenodo 3969339, Besca-reprocessed)
-h5ad_path: "data/raw/zenodo_3969339/StdWf1_PRJCA001063_annotated.h5ad"
-class_col: "celltype1"
-max_cells_per_class: 300
-export_seed: 1
+# References are optional, prepared outside Snakemake. XDec's CLI flag is --refs.
+# Set both paths to enable the reference-labeled Stage 1/2 branches.
+refs: null
+ref_metadata: null
 
-# Bulk inputs (notebook 02 output)
-bulk_counts: "data/processed/TCGA-PAAD_counts_raw.tsv"
+# Reference-free runs require an existing informative-gene list.
+# Set probes_file: null to derive genes from refs + ref_metadata instead.
+probes_file: "data/informative_genes.txt"
+
+# Prepared bulk-expression input (genes x samples, nonnegative linear scale)
+bulk_counts: "data/bulk_expression.tsv"
 
 # XDec (BRL-BCM/XDec_SM) repo, cloned automatically if absent
 xdec_repo: "tools/XDec_SM"
@@ -21,17 +24,13 @@ xdec_repo: "tools/XDec_SM"
 # `snakemake --cores N` together with threads_per_k below
 # (N / threads_per_k concurrent k's) -- not by anything in this file.
 k_range: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-threads_per_k: 2  # ~1.3 cores observed per k-sweep worker on the reference M3 run; --cores 6 -> 3 concurrent k's, matching the original hardcoded ThreadPoolExecutor(max_workers=3)
+threads_per_k: 2  # Scheduling allocation per stability job; tune for available resources.
 
 # Stage 1/2 "with refs" reruns (correlation-based cell-type labeling)
 refs_k_values: [3, 8]
-# Which refs_k_values entry is additionally aliased to the unsuffixed
-# stage1_with_refs/ (no _k{k} suffix) path -- kept only because notebook
-# 07 (cross-tool EDA) reads that exact unsuffixed path. New k's always get
-# the consistent stage1_with_refs_k{k}/ naming; only this one is duplicated.
+# Reference-labeled k additionally copied to the unsuffixed stage1_with_refs/
+# directory for consumers that require a fixed output path.
 legacy_alias_k: 3
 
-# Interpreter used for every xdec.py / workflow/scripts/*.py call (needs
-# pandas/numpy/scanpy -- the pixi "python" global env, not the "r-base" one
-# these notebooks otherwise use).
-python_bin: "~/.pixi/envs/python/bin/python"
+# Python executable on PATH, or an interpreter path with numpy/pandas/scipy installed.
+python_bin: "python3"

@@ -1,10 +1,10 @@
-"""XDec end-to-end pipeline (reference export -> Stage 0 -> k-sweep -> Stage 1 -> Stage 2).
+"""XDec end-to-end pipeline (Stage 0 -> k-sweep -> Stage 1 -> Stage 2; optional pre-exported references).
 
 Self-contained, runnable with no notebook involved. Full usage instructions
 (how to run, partition/parallelism knobs, config overrides, resilience flags,
 cluster scaling) are in README.md next to this file -- read that first.
 
-Quick start, from the `progress/` directory:
+Quick start, from the directory containing `workflow/`:
     snakemake --snakefile workflow/Snakefile --cores 6
 """
 import os
@@ -19,13 +19,19 @@ XDEC_DIR = "data/deconvolution/xdec"
 BULK_COUNTS = config["bulk_counts"]
 K_RANGE = [int(k) for k in config["k_range"]]
 K_RANGE_PADDED = [f"{k:02d}" for k in K_RANGE]
-REFS_K_VALUES = [int(k) for k in config["refs_k_values"]]
+REFS_PATH = config.get("refs")
+META_PATH = config.get("ref_metadata")
+if META_PATH and not REFS_PATH:
+    raise ValueError("ref_metadata requires refs")
+REFS_K_VALUES = [int(k) for k in config["refs_k_values"]] if REFS_PATH else []
 LEGACY_ALIAS_K = int(config["legacy_alias_k"])
 
-REFS_PATH = f"{XDEC_DIR}/refs.tsv"
-META_PATH = f"{XDEC_DIR}/ref_metadata.tsv"
 STAGE0_DIR = f"{XDEC_DIR}/stage0"
-PROBES_PATH = f"{STAGE0_DIR}/selected_probes.txt"
+PROBES_PATH = config.get("probes_file") or f"{STAGE0_DIR}/selected_probes.txt"
+if not config.get("probes_file") and not (REFS_PATH and META_PATH):
+    raise ValueError("Supply probes_file, or refs and ref_metadata for Stage 0 gene selection")
+if REFS_PATH and not META_PATH:
+    raise ValueError("Reference labeling requires ref_metadata alongside refs")
 SWEEP_DIR = f"{XDEC_DIR}/full_sweep"
 OPTIMAL_K_PATH = f"{SWEEP_DIR}/optimal_k.txt"
 
@@ -35,7 +41,7 @@ rule all:
         f"{XDEC_DIR}/stage2/stage2_means.tsv",
         expand(f"{XDEC_DIR}/stage1_with_refs_k{{k}}/proportions.tsv", k=REFS_K_VALUES),
         expand(f"{XDEC_DIR}/stage2_with_refs_k{{k}}/stage2_means.tsv", k=REFS_K_VALUES),
-        f"{XDEC_DIR}/stage1_with_refs/proportions.tsv",  # legacy alias, see config.yaml
+        [f"{XDEC_DIR}/stage1_with_refs/proportions.tsv"] if REFS_PATH else [],
 
 
 rule clone_xdec:
@@ -49,48 +55,26 @@ rule clone_xdec:
         "> {log} 2>&1"
 
 
-rule export_reference:
-    input:
-        h5ad=config["h5ad_path"],
-        script=XDEC_SCRIPT,
-    output:
-        refs=REFS_PATH,
-        meta=META_PATH,
-    params:
-        class_col=config["class_col"],
-        max_cells=config["max_cells_per_class"],
-        seed=config["export_seed"],
-    log:
-        "logs/export_reference.log",
-    benchmark:
-        "logs/benchmarks/export_reference.tsv"
-    shell:
-        "{PYTHON} workflow/scripts/export_peng_reference.py "
-        "--h5ad {input.h5ad} --class-col {params.class_col} "
-        "--max-cells-per-class {params.max_cells} --seed {params.seed} "
-        "--refs-out {output.refs} --meta-out {output.meta} "
-        "> {log} 2>&1"
-
-
-rule stage0_probes:
-    input:
-        bulk=BULK_COUNTS,
-        refs=REFS_PATH,
-        meta=META_PATH,
-        script=XDEC_SCRIPT,
-    output:
-        probes=PROBES_PATH,
-    params:
-        outdir=STAGE0_DIR,
-    log:
-        "logs/stage0_probes.log",
-    benchmark:
-        "logs/benchmarks/stage0_probes.tsv"
-    shell:
-        "{PYTHON} {input.script} stage0 --bulk {input.bulk} "
-        "--refs {input.refs} --ref-metadata {input.meta} "
-        "--skip-stability --outdir {params.outdir} "
-        "> {log} 2>&1"
+if not config.get("probes_file"):
+    rule stage0_probes:
+        input:
+            bulk=BULK_COUNTS,
+            refs=REFS_PATH,
+            meta=META_PATH,
+            script=XDEC_SCRIPT,
+        output:
+            probes=PROBES_PATH,
+        params:
+            outdir=STAGE0_DIR,
+        log:
+            "logs/stage0_probes.log",
+        benchmark:
+            "logs/benchmarks/stage0_probes.tsv"
+        shell:
+            "{PYTHON} {input.script} stage0 --bulk {input.bulk} "
+            "--refs {input.refs} --ref-metadata {input.meta} "
+            "--skip-stability --outdir {params.outdir} "
+            "> {log} 2>&1"
 
 
 rule stage0_stability_k:
@@ -173,68 +157,66 @@ rule stage2_main:
         "> {log} 2>&1"
 
 
-rule stage1_with_refs:
-    input:
-        bulk=BULK_COUNTS,
-        probes=PROBES_PATH,
-        refs=REFS_PATH,
-        meta=META_PATH,
-        script=XDEC_SCRIPT,
-    output:
-        proportions=f"{XDEC_DIR}/stage1_with_refs_k{{k}}/proportions.tsv",
-        profiles=f"{XDEC_DIR}/stage1_with_refs_k{{k}}/cell_type_profiles.tsv",
-        correlation=f"{XDEC_DIR}/stage1_with_refs_k{{k}}/correlation.tsv",
-    wildcard_constraints:
-        k=r"\d+",
-    params:
-        outdir=lambda wc: f"{XDEC_DIR}/stage1_with_refs_k{wc.k}",
-    log:
-        "logs/stage1_with_refs_k{k}.log",
-    benchmark:
-        "logs/benchmarks/stage1_with_refs_k{k}.tsv"
-    shell:
-        "{PYTHON} {input.script} stage1 --bulk {input.bulk} "
-        "--probes {input.probes} --refs {input.refs} --ref-metadata {input.meta} "
-        "--k {wildcards.k} --outdir {params.outdir} "
-        "> {log} 2>&1"
+if REFS_PATH:
+    rule stage1_with_refs:
+        input:
+            bulk=BULK_COUNTS,
+            probes=PROBES_PATH,
+            refs=REFS_PATH,
+            meta=META_PATH,
+            script=XDEC_SCRIPT,
+        output:
+            proportions=f"{XDEC_DIR}/stage1_with_refs_k{{k}}/proportions.tsv",
+            profiles=f"{XDEC_DIR}/stage1_with_refs_k{{k}}/cell_type_profiles.tsv",
+            correlation=f"{XDEC_DIR}/stage1_with_refs_k{{k}}/correlation.tsv",
+        wildcard_constraints:
+            k=r"\d+",
+        params:
+            outdir=lambda wc: f"{XDEC_DIR}/stage1_with_refs_k{wc.k}",
+        log:
+            "logs/stage1_with_refs_k{k}.log",
+        benchmark:
+            "logs/benchmarks/stage1_with_refs_k{k}.tsv"
+        shell:
+            "{PYTHON} {input.script} stage1 --bulk {input.bulk} "
+            "--probes {input.probes} --refs {input.refs} --ref-metadata {input.meta} "
+            "--k {wildcards.k} --outdir {params.outdir} "
+            "> {log} 2>&1"
 
 
-rule stage1_with_refs_legacy_alias:
-    # notebook 07 (cross-tool EDA) reads the unsuffixed stage1_with_refs/
-    # path directly; everything new is written consistently as
-    # stage1_with_refs_k{k}/, and this one entry (config["legacy_alias_k"])
-    # is additionally copied to the old unsuffixed location.
-    input:
-        proportions=f"{XDEC_DIR}/stage1_with_refs_k{LEGACY_ALIAS_K}/proportions.tsv",
-        profiles=f"{XDEC_DIR}/stage1_with_refs_k{LEGACY_ALIAS_K}/cell_type_profiles.tsv",
-        correlation=f"{XDEC_DIR}/stage1_with_refs_k{LEGACY_ALIAS_K}/correlation.tsv",
-    output:
-        proportions=f"{XDEC_DIR}/stage1_with_refs/proportions.tsv",
-        profiles=f"{XDEC_DIR}/stage1_with_refs/cell_type_profiles.tsv",
-        correlation=f"{XDEC_DIR}/stage1_with_refs/correlation.tsv",
-    shell:
-        "cp {input.proportions} {output.proportions} "
-        "&& cp {input.profiles} {output.profiles} "
-        "&& cp {input.correlation} {output.correlation}"
+    rule stage1_with_refs_legacy_alias:
+        # Copy the configured reference-labeled result to a fixed output path.
+        input:
+            proportions=f"{XDEC_DIR}/stage1_with_refs_k{LEGACY_ALIAS_K}/proportions.tsv",
+            profiles=f"{XDEC_DIR}/stage1_with_refs_k{LEGACY_ALIAS_K}/cell_type_profiles.tsv",
+            correlation=f"{XDEC_DIR}/stage1_with_refs_k{LEGACY_ALIAS_K}/correlation.tsv",
+        output:
+            proportions=f"{XDEC_DIR}/stage1_with_refs/proportions.tsv",
+            profiles=f"{XDEC_DIR}/stage1_with_refs/cell_type_profiles.tsv",
+            correlation=f"{XDEC_DIR}/stage1_with_refs/correlation.tsv",
+        shell:
+            "cp {input.proportions} {output.proportions} "
+            "&& cp {input.profiles} {output.profiles} "
+            "&& cp {input.correlation} {output.correlation}"
 
 
-rule stage2_with_refs:
-    input:
-        bulk=BULK_COUNTS,
-        proportions=f"{XDEC_DIR}/stage1_with_refs_k{{k}}/proportions.tsv",
-        script=XDEC_SCRIPT,
-    output:
-        means=f"{XDEC_DIR}/stage2_with_refs_k{{k}}/stage2_means.tsv",
-        stderrs=f"{XDEC_DIR}/stage2_with_refs_k{{k}}/stage2_stderrs.tsv",
-    wildcard_constraints:
-        k=r"\d+",
-    params:
-        outdir=lambda wc: f"{XDEC_DIR}/stage2_with_refs_k{wc.k}",
-    log:
-        "logs/stage2_with_refs_k{k}.log",
-    benchmark:
-        "logs/benchmarks/stage2_with_refs_k{k}.tsv"
-    shell:
-        "{PYTHON} {input.script} stage2 --bulk-counts {input.bulk} "
-        "--proportions {input.proportions} --outdir {params.outdir} "
-        "> {log} 2>&1"
+    rule stage2_with_refs:
+        input:
+            bulk=BULK_COUNTS,
+            proportions=f"{XDEC_DIR}/stage1_with_refs_k{{k}}/proportions.tsv",
+            script=XDEC_SCRIPT,
+        output:
+            means=f"{XDEC_DIR}/stage2_with_refs_k{{k}}/stage2_means.tsv",
+            stderrs=f"{XDEC_DIR}/stage2_with_refs_k{{k}}/stage2_stderrs.tsv",
+        wildcard_constraints:
+            k=r"\d+",
+        params:
+            outdir=lambda wc: f"{XDEC_DIR}/stage2_with_refs_k{wc.k}",
+        log:
+            "logs/stage2_with_refs_k{k}.log",
+        benchmark:
+            "logs/benchmarks/stage2_with_refs_k{k}.tsv"
+        shell:
+            "{PYTHON} {input.script} stage2 --bulk-counts {input.bulk} "
+            "--proportions {input.proportions} --outdir {params.outdir} "
+            "> {log} 2>&1"

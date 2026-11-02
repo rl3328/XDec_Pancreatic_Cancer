@@ -1,125 +1,163 @@
-# XDec deconvolution workflow (Snakemake)
+# XDec deconvolution workflow
 
-Reproducible, standalone pipeline for the XDec (`BRL-BCM/XDec_SM`) deconvolution of the
-TCGA-PAAD cohort: reference export -> Stage 0 gene selection -> k-stability sweep ->
-Stage 1 (proportions) -> Stage 2 (per-cell-type expression), optionally repeated
-with reference-labeling at several `k` values.
-
-This directory is self-contained and has no dependency on any notebook - everything
-here is runnable from a plain terminal. `04_xdec_deconvolution.ipynb`
-(in `../scripts/rnaseq_download/`) documents the original, pre-Snakemake hand-run of
-the same pipeline for historical record.
-
-## Layout
-
-```
-workflow/
-  Snakefile              rules: export_reference, stage0_probes, stage0_stability_k,
-                         aggregate_stability, stage1_main, stage2_main,
-                         stage1_with_refs, stage1_with_refs_legacy_alias, stage2_with_refs
-  config/config.yaml     every tunable parameter (paths, k_range, refs_k_values, seeds)
-  scripts/
-    export_peng_reference.py   Peng et al. 2019 reference export (Stage 0 input)
-    aggregate_stability.py     combines per-k stability_scores.tsv -> optimal_k.txt
-```
+A Snakemake workflow for bulk-expression deconvolution with
+[XDec-SM](https://github.com/BRL-BCM/XDec_SM): optional informative-gene selection,
+cell-type-number stability sweep, Stage 1 proportion estimation, and Stage 2
+cell-type expression estimation. Pre-exported references are optional.
 
 ## Prerequisites
 
-* `snakemake` on `PATH` (already installed via pixi for this project).
-* The pixi `python` global env (`~/.pixi/envs/python/bin/python` - matches
-  `config.yaml`'s `python_bin`), which has pandas/numpy/scanpy. Every `xdec.py` and
-  `workflow/scripts/*.py` call runs under this interpreter, not Snakemake's own.
-* `tools/XDec_SM` is cloned automatically on first run if absent.
+* Python 3.10 or newer.
+* Snakemake.
+* Python packages `numpy`, `pandas`, and `scipy` in the environment used to run XDec.
+* Optional: `quadprog` for XDec's quadratic-programming solver; XDec uses a SciPy
+  fallback when it is unavailable.
+* Git and network access if the XDec repository needs to be cloned. Alternatively,
+  provide an existing checkout through `xdec_repo`.
+* A nonnegative, linear-scale bulk-expression TSV with genes as rows and sample
+  identifiers as columns. Select expression units appropriate to the analysis;
+  this workflow passes the supplied matrix directly to XDec.
+* An informative-gene list, or pre-exported reference expression and metadata TSVs
+  from which informative genes can be selected.
 
-## Running it
+The workflow does not install Python packages or export references. The optional
+standalone reference-export helper additionally requires `scanpy`.
 
-Always run from the `progress/` directory (this pipeline's root - matches every
-notebook's own working directory and all the relative paths in `config.yaml`):
+## Layout
 
-```bash
-cd progress
-snakemake --snakefile workflow/Snakefile --cores 6
+```text
+workflow/
+  Snakefile
+  config/config.yaml
+  scripts/aggregate_stability.py
 ```
 
-Preview what would run, without doing anything:
+## Configuration
+
+Set input paths in `workflow/config/config.yaml` or supply a separate YAML file.
+The default input paths are placeholders and must point to prepared input files.
+Relative paths are resolved from the working directory where Snakemake is run.
+
+```yaml
+bulk_counts: data/bulk_expression.tsv
+probes_file: data/informative_genes.txt
+refs: null
+ref_metadata: null
+python_bin: python3
+xdec_repo: tools/XDec_SM
+```
+
+`python_bin` can be an executable on `PATH` or a path to a Python interpreter
+containing the required packages. It is used for XDec and workflow helper calls.
+`bulk_counts` is the input path used for both Stage 0/1 and Stage 2.
+
+Reference-free execution requires an existing `probes_file`, with one gene
+identifier per line matching the bulk-expression row identifiers.
+
+## Running
+
+Run from the directory containing `workflow/` and the configured relative inputs:
 
 ```bash
 snakemake --snakefile workflow/Snakefile --cores 6 -n
+snakemake --snakefile workflow/Snakefile --cores 6
 ```
 
-Target a single output directly (e.g. backfill just one k instead of the whole sweep):
+Use a separate configuration file:
+
+```bash
+snakemake --snakefile workflow/Snakefile --configfile analysis.yaml --cores 6 -n
+```
+
+Target one stability result:
 
 ```bash
 snakemake --snakefile workflow/Snakefile --cores 2 \
     data/deconvolution/xdec/full_sweep/k_09/stability_scores.tsv
 ```
 
-## Partitioning and parallelism
+## Optional references
 
-**Partition axis:** one job per individual `k` in `config["k_range"]` for the Stage 0
-stability sweep (`k=3..12` by default) - each its own subprocess, because
-`xdec.py stage0`'s combined multi-k mode only writes `stability_scores.tsv` once the
-*entire* k-range loop finishes. Partitioning means a kill loses at most the k's in
-flight, not the whole sweep.
+References must be prepared outside Snakemake. No rule exports references or
+requires an H5AD file.
 
-**Parallelism, controlled entirely outside this repo's code:** `--cores N` together
-with `threads_per_k` in `config.yaml` (default 2, matching ~1.3 cores/worker observed
-on the reference run) sets how many k's run at once:
+Enable reference-labeled Stage 1/2 runs by configuring both files:
 
-```bash
-snakemake --snakefile workflow/Snakefile --cores 6    # 3 concurrent k's
-snakemake --snakefile workflow/Snakefile --cores 2    # mostly sequential
-snakemake --snakefile workflow/Snakefile --cores 20   # fully parallel (all 10 k's at once)
+```yaml
+refs: data/reference_expression.tsv
+ref_metadata: data/reference_metadata.tsv
+refs_k_values: [3, 8]
 ```
 
-Override any other config value the same way, without editing `config.yaml`:
+The expression TSV has genes as rows and reference samples/cells as columns. The
+metadata TSV contains `Sample_ID` and `Cell_Type` columns, with identifiers matching
+the reference columns. Reference values must use the linear scale expected by XDec.
+
+With `refs: null`, reference-labeled rules and targets are omitted. When references
+are supplied, these additional Stage-1 runs pass XDec's `--refs` and
+`--ref-metadata` arguments. The main Stage-1 branch remains reference-free.
+`legacy_alias_k` selects which reference-labeled result is also copied to the
+unsuffixed `stage1_with_refs/` output directory.
+
+To select informative genes from the references instead of providing a list:
+
+```yaml
+refs: data/reference_expression.tsv
+ref_metadata: data/reference_metadata.tsv
+probes_file: null
+```
+
+Both reference files are required for this gene-selection mode. Without references,
+an existing informative-gene list is required; all genes are never silently used
+as a substitute. Missing required inputs produce an error when their jobs are built.
+
+## Outputs
+
+Results are written under `data/deconvolution/xdec/`:
+
+* `stage0/selected_probes.txt`: generated informative genes, when gene selection is enabled.
+* `full_sweep/`: per-k and combined stability scores, plus `optimal_k.txt`.
+* `stage1/`: main proportions and normalized profiles.
+* `stage2/`: main expression means and standard errors.
+* `stage1_with_refs_k*/` and `stage2_with_refs_k*/`: optional reference-labeled results.
+* `stage1_with_refs/`: compatibility copy of the configured reference-labeled result.
+
+Per-job logs are written to `logs/`; timing and memory benchmarks are written to
+`logs/benchmarks/` for rules with benchmark directives. Snakemake tracks execution
+metadata in `.snakemake/`.
+
+## Parallelism
+
+The stability sweep creates one job per k in `k_range`. `--cores N` and
+`threads_per_k` determine how many jobs can be scheduled together. For example,
+`--cores 6` with `threads_per_k: 2` permits up to three simultaneous sweep jobs.
+Actual CPU use depends on the numerical libraries and their thread settings.
+
+Override list settings using YAML/JSON list syntax:
 
 ```bash
 snakemake --snakefile workflow/Snakefile --cores 6 \
-    --config k_range="3,4,5" refs_k_values="3,8,9"
+    --config k_range='[3,4,5]' refs_k_values='[3,8,9]'
 ```
 
-**Documented side effect of partitioning, unchanged regardless of concurrency:**
-`xdec.py`'s stability-estimation RNG resets to the same `--seed` at the start of every
-single-k subprocess, so each k-partition draws the same first segment of its random
-sample-subsets rather than the segment it would get inside one combined
-`--k-range 3,...,12` call. Stability scores from a partitioned sweep are close to, but
-not bit-identical with, a single combined run - independent of how many k's run
-concurrently.
+Each per-k subprocess starts with XDec's default random seed. Its random-number
+sequence differs from running the complete k range in one subprocess, so the
+partitioned and combined sweeps need not produce identical scores.
 
-## Resilience for multi-hour unattended runs
+## Resuming and existing outputs
 
-The original hand-run sweep took ~11 hours overnight and survived two interruptions
-(a confirmed macOS idle-sleep kill, and one unresolved kill despite `caffeinate -i`).
-This workflow replaces that run's manual try/except + hand-written `timing_log.tsv`
-with:
+Use `--rerun-incomplete` to rerun interrupted jobs and `--keep-going` to allow
+independent jobs to continue after a failure. Inspect a dry-run before execution,
+especially after changing inputs or parameters: existing output paths can be reused
+and scheduled for recomputation.
 
-* **Every rule's output file is itself the checkpoint.** Rerunning the same command
-  after a kill only redoes what's missing - no separate resume logic.
-* `--rerun-incomplete` - clean up and redo anything left half-written by a kill.
-* `--keep-going` - let independent jobs (other k's) keep running past one failure
-  instead of stopping everything.
-* `benchmark:` directives write per-job elapsed time + peak memory automatically to
-  `logs/benchmarks/*.tsv` (e.g. `logs/benchmarks/stage0_stability_k09.tsv`).
-* Per-rule logs land in `logs/*.log` (stdout+stderr of the underlying `xdec.py` call).
+If adopting outputs generated elsewhere, verify their inputs, parameters and tool
+versions before registering them with Snakemake. File existence alone does not
+establish that results belong to the configured analysis.
 
-Both `logs/` and Snakemake's own `.snakemake/` metadata cache are gitignored -
-regenerate them by rerunning, don't expect them to survive a `git clone`.
+## Cluster execution
 
-### Adopting this workflow onto outputs that already exist
-
-If `data/deconvolution/xdec/` already has outputs from before this workflow existed
-(true for this repo - see `04_xdec_deconvolution.ipynb`), Snakemake's file-modification-time
-checks may not match its DAG and it will want to redo everything. Register the
-existing outputs as up to date once, instead of rerunning them:
-
-```bash
-snakemake --snakefile workflow/Snakefile --cores 6 --touch
-```
-
-## Scaling beyond one machine
-
-No Snakefile changes needed: install a `snakemake-executor-plugin-<slurm/...>` and add
-`--executor slurm --jobs 50` (or an equivalent `--profile` directory) to the command
-line. The k-partitioned Stage 0 sweep is the embarrassingly-parallel step that
-benefits most from this.
+Install the appropriate Snakemake executor plugin and configure its resources or
+profile. For example, a Slurm installation can use `--executor slurm --jobs 50`.
+All compute nodes need access to the configured interpreter, dependencies, inputs,
+XDec checkout and output locations.
