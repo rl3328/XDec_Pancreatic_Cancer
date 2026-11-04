@@ -10,6 +10,7 @@ Pipeline notebooks for the TCGA-PAAD RNA-seq deconvolution analysis, run in orde
 - `07_three_tool_eda.ipynb` — cross-tool EDA comparing XDec, CIBERSORTx, and TIMER results and downstream biological interpretation.
 - `08_count_tpm_sanity_check.ipynb` — sensitivity check of XDec results to raw-counts vs. TPM input.
 - `09_cibersortx_reference_sanity_check.ipynb` — sensitivity check of CIBERSORTx results to its signature-matrix choice (default LM22 vs. a custom matrix built from the Peng et al. single-cell reference).
+- `11_single_cell_reference_probe_validation.ipynb` — visualizes the Peng et al. single-cell reference restricted to XDec's 344 Stage-0 selected probes (heatmap sorted by cell type) and quantifies (silhouette score, cell-type-mean correlation) how well that probe set distinguishes the reference's 10 cell types.
 - `archive/` — superseded/earlier versions of the above notebooks, kept for reference.
 - `data/` — notebook outputs (QC tables tracked in git; raw/processed matrices gitignored).
 
