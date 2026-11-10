@@ -1,0 +1,27 @@
+# Config for run_large_k_sweep.sh (progress/workflow/Snakefile).
+#
+# Reruns the Stage 1 (proportions) + Stage 2 (per-cell-type expression) "with
+# refs" branch of the pipeline already used in scripts/04_xdec_deconvolution.ipynb
+# for k=3,8,9, but swept over k=8..20 -- same full 182-sample TCGA-PAAD cohort,
+# same 344-gene Stage-0 probe list, same Peng et al. reference. No new Stage-0
+# gene selection or stability sweep is requested (see run_large_k_sweep.sh).
+
+refs: "data/deconvolution/xdec/refs.tsv"
+ref_metadata: "data/deconvolution/xdec/ref_metadata.tsv"
+
+probes_file: "data/deconvolution/xdec/stage0/selected_probes.txt"
+
+bulk_counts: "data/processed/TCGA-PAAD_counts_raw.tsv"
+
+xdec_repo: "tools/XDec_SM"
+
+# Required by the Snakefile but not exercised by the targets
+# run_large_k_sweep.sh requests (no Stage-0 stability sweep, no non-refs
+# Stage 1/2) -- carried over unchanged from workflow/config/config.yaml.
+k_range: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+threads_per_k: 2
+legacy_alias_k: 3
+
+refs_k_values: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+
+python_bin: "python3"
