@@ -1,0 +1,10 @@
+/Users/liruixi/Desktop/i20_transfer/QCB/rotation/Alex/XDec_Pancreatic_Cancer/progress/tools/XDec_SM/python/xdec.py:136: UserWarning: quadprog not installed.  Stage 1 will use a scipy SLSQP fallback (correct but slower).  Install with:  pip install quadprog
+  warnings.warn(
+12:12:26  INFO      Loaded data/deconvolution/xdec/TCGA-PAAD_counts_raw_n150.tsv: 53885 genes × 150 samples
+12:12:29  INFO      After normalisation: 53885 expressed genes × 150 bulk samples
+12:12:29  INFO      Loaded 282 probes from data/deconvolution/xdec/gene_lists/xdec_chi_table_s3_genes.txt
+12:12:29  INFO      Saved 282 probes → xdec_fresh_run_n150/stage0/k_07/selected_probes.txt
+12:12:29  INFO      Stability: testing k=7 …
+12:38:53  INFO        k= 7  stability=0.8688
+12:38:53  INFO      Saved  xdec_fresh_run_n150/stage0/k_07/stability_scores.tsv  (1 × 1)
+12:38:53  INFO      Recommended k = 7  (stability=0.8688)

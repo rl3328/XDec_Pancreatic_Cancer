@@ -1,0 +1,13 @@
+/Users/liruixi/Desktop/i20_transfer/QCB/rotation/Alex/XDec_Pancreatic_Cancer/progress/tools/XDec_SM/python/xdec.py:136: UserWarning: quadprog not installed.  Stage 1 will use a scipy SLSQP fallback (correct but slower).  Install with:  pip install quadprog
+  warnings.warn(
+10:20:44  INFO      Loaded data/deconvolution/xdec/TCGA-PAAD_counts_raw_n150.tsv: 53885 genes × 150 samples
+10:20:44  INFO      Loaded data/deconvolution/xdec/paper_style_ref/refs_pseudobulk_raw.tsv: 16935 genes × 909 samples
+10:20:45  INFO      Joint normalisation over 16841 shared genes (bulk + refs)
+10:20:47  INFO      After normalisation: 16824 expressed genes × 150 bulk samples
+10:20:47  INFO      Loaded 282 probes from data/deconvolution/xdec/gene_lists/xdec_chi_table_s3_genes.txt
+10:20:47  INFO      Stage 1: k=9, max_its=2000, rss_diff_stop=1.0e-10, seed=12345
+10:20:47  INFO      Using 248 / 282 probes found in bulk matrix
+10:34:26  INFO      Saved  xdec_fresh_run_n150/stage1_k9/correlation.tsv  (10 × 9)
+10:34:26  INFO      Inspect correlation.tsv to assign cell-type labels to Profile_i columns.
+10:34:26  INFO      Saved  xdec_fresh_run_n150/stage1_k9/proportions.tsv  (150 × 9)
+10:34:26  INFO      Saved  xdec_fresh_run_n150/stage1_k9/cell_type_profiles.tsv  (16824 × 9)
