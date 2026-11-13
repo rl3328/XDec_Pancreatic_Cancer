@@ -1,0 +1,5 @@
+reference_variant	n_dead_like_profiles	top_dead_profile	top_dead_dominant_n	top_dead_max_r	combined_dead_dominant_n	combined_dead_pct
+A: celltype1 merged, single-cell (project baseline)	5	Profile_12	94	-0.18023417813075174	99	66.0
+B: Cell_type split, single-cell	5	Profile_9	87	-0.14514804976441226	99	66.0
+C: Cell_type split, pseudo-bulk (paper-style)	4	Profile_12	77	0.011672530695268617	114	76.0
+D: + Classical/Basal split within Ductal-2, pseudo-bulk	4	Profile_4	78	0.05324640104414172	115	76.7

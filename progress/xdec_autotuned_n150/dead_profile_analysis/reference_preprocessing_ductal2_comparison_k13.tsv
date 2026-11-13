@@ -1,0 +1,8 @@
+reference_variant	reference_row	best_matching_profile	best_r
+A: celltype1 merged, single-cell (project baseline)	pancreatic ductal cell	Profile_13	0.4373580148181194
+B: Cell_type split, single-cell	Ductal cell type 2	Profile_10	0.4029187987245025
+C: Cell_type split, pseudo-bulk (paper-style)	Ductal cell type 2	Profile_11	0.636160987522974
+"D: + Classical/Basal split within Ductal-2, pseudo-bulk
+[Ductal cell type 2 - Basal-like]"	Ductal cell type 2 - Basal-like	Profile_3	0.5844332624808226
+"D: + Classical/Basal split within Ductal-2, pseudo-bulk
+[Ductal cell type 2 - Classical-like]"	Ductal cell type 2 - Classical-like	Profile_3	0.6501837187149364
